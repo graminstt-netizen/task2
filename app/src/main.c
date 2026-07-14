@@ -53,8 +53,41 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    // временный вывод, чтобы проверить, как работает гетопт
-    printf("Debug: Arguments parsed successfully!\n");
+    // блок валидации аргументов
+
+    // 1. Проверяем, что указано что-то одно: либо файл, либо директория
+    if (opts.file_name == NULL && opts.dir_name == NULL) {
+        fprintf(stderr, "Error: You must specify either file (-i) or directory (-d).\n");
+        return 1;
+    }
+    if (opts.file_name != NULL && opts.dir_name != NULL) {
+        fprintf(stderr, "Error: You cannot specify both file (-i) and directory (-d) at the same time.\n");
+        return 1;
+    }
+
+    // 2. Проверяем корректность смещения
+    if (opts.offset < 0) {
+        fprintf(stderr, "Error: Offset (-o) must be non-negative.\n");
+        return 1;
+    }
+
+    // 3. Проверяем лимит на чтение
+    if (opts.length <= 0 && opts.length != -1) {
+        fprintf(stderr, "Error: Length (-l) must be positive.\n");
+        return 1;
+    }
+
+    // 4. Проверяем размер кусочка и количество колонок
+    if (opts.group_size <= 0) {
+        fprintf(stderr, "Error: Group size (-g) must be positive.\n");
+        return 1;
+    }
+    if (opts.group_per_line <= 0) {
+        fprintf(stderr, "Error: Groups per line (-n) must be positive.\n");
+        return 1;
+    }
+
+    printf("Debug: Arguments parsed and validated successfully!\n");
     printf("File Name: %s\n", opts.file_name ? opts.file_name : "NULL");
     printf("Offset: %ld\n", opts.offset);
     printf("Length: %ld\n", opts.length);
