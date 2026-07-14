@@ -1,5 +1,5 @@
 /*
-lib_main.c - реализация функций библиотеки.
+lib_main.c - реализация функций библиотеки (только для Windows).
 
 Бабурин Дмитрий Сергеевич
 МК-101
@@ -8,6 +8,9 @@ lib_main.c - реализация функций библиотеки.
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <string.h>
+#include <windows.h> // Родные функции Windows API для работы с файловой системой
+
 #include "lib_main.h"
 
 // Ручной перевод одного байта в шестнадцатеричные символы и вывод через %c
@@ -65,10 +68,8 @@ void process_file(const char *filepath, const AppOptions *opts) {
         printf("%08lx  ", current_offset);
 
         // 2. Выводим группы в шестнадцатеричном виде (Little Endian)
-        // Вычисляем, сколько групп получилось на этой строке (округляем вверх)
         int num_groups = (bytes_read + opts->group_size - 1) / opts->group_size;
         for (int j = 0; j < num_groups; j++) {
-            // Выводим байты группы от старшего адреса к младшему (Little Endian)
             for (int i = opts->group_size - 1; i >= 0; i--) {
                 int byte_idx = j * opts->group_size + i;
                 if (byte_idx < bytes_read) {
@@ -108,4 +109,38 @@ void process_file(const char *filepath, const AppOptions *opts) {
 
     free(line_buf);
     fclose(f);
+}
+
+// Обработка всех файлов в указанной директории через Windows API
+void process_directory(const char *dirpath, const AppOptions *opts) {
+    char search_path[1024];
+    // Для Windows API путь поиска должен заканчиваться на \*
+    snprintf(search_path, sizeof(search_path), "%s\\*", dirpath);
+
+    WIN32_FIND_DATAA find_data;
+    HANDLE hFind = FindFirstFileA(search_path, &find_data);
+
+    if (hFind == INVALID_HANDLE_VALUE) {
+        fprintf(stderr, "Error: Cannot open directory %s\n", dirpath);
+        return;
+    }
+
+    char filepath[1024];
+    do {
+        // Пропускаем ссылки на "." и ".."
+        if (strcmp(find_data.cFileName, ".") == 0 || strcmp(find_data.cFileName, "..") == 0) {
+            continue;
+        }
+
+        // Проверяем, является ли найденный объект файлом (а не подпапкой)
+        if (!(find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+            // Формируем путь к файлу: "имя_папки/имя_файла"
+            snprintf(filepath, sizeof(filepath), "%s/%s", dirpath, find_data.cFileName);
+            printf("File: %s\n", find_data.cFileName);
+            process_file(filepath, opts);
+            printf("\n"); // Отступ между файлами
+        }
+    } while (FindNextFileA(hFind, &find_data));
+
+    FindClose(hFind);
 }

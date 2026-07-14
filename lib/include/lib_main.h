@@ -1,5 +1,5 @@
 /*
-Заголовочный файл библиотеки hexview. Определение интерфейсов.
+Заголовочный файл библиотеки hexview (только для Windows).
 
 Бабурин Дмитрий Сергеевич
 МК-101
@@ -20,5 +20,11 @@ typedef struct {
 
 // Ручной перевод одного байта в шестнадцатеричные символы и вывод через %c
 void print_byte_hex(unsigned char b);
+
+// Обработка и вывод содержимого одного файла
+void process_file(const char *filepath, const AppOptions *opts);
+
+// Обработка всех файлов в указанной директории (через Windows API)
+void process_directory(const char *dirpath, const AppOptions *opts);
 
 #endif // LIB_MAIN_H

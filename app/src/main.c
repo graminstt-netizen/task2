@@ -1,5 +1,5 @@
 /*
-main.c - главный модуль программы.
+main.c - главный модуль программы (только для Windows).
 
 Бабурин Дмитрий Сергеевич
 МК-101
@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    // блок валидации аргументов
+
 
     // 1. Проверяем, что указано что-то одно: либо файл, либо директория
     if (opts.file_name == NULL && opts.dir_name == NULL) {
@@ -87,13 +87,13 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    printf("Debug: Arguments parsed and validated successfully!\n");
-    printf("File Name: %s\n", opts.file_name ? opts.file_name : "NULL");
-    printf("Offset: %ld\n", opts.offset);
-    printf("Length: %ld\n", opts.length);
-    printf("Group Size: %d\n", opts.group_size);
-    printf("Groups Per Line: %d\n", opts.group_per_line);
-    printf("Directory: %s\n", opts.dir_name ? opts.dir_name : "NULL");
+
+    // Если задана директория, обрабатываем её файлы, иначе — один файл
+    if (opts.dir_name != NULL) {
+        process_directory(opts.dir_name, &opts);
+    } else {
+        process_file(opts.file_name, &opts);
+    }
 
     return 0;
 }
