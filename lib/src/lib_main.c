@@ -64,26 +64,32 @@ void process_file(const char *filepath, const AppOptions *opts) {
         // 1. Выводим смещение строки (разрешено через printf)
         printf("%08lx  ", current_offset);
 
-        // 2. Выводим байты в шестнадцатеричном виде через print_byte_hex
-        for (int i = 0; i < bytes_read; i++) {
-            print_byte_hex(line_buf[i]);
-            printf("%c", ' '); // Выводим пробел после каждого байта
+        // 2. Выводим группы в шестнадцатеричном виде (Little Endian)
+        // Вычисляем, сколько групп получилось на этой строке (округляем вверх)
+        int num_groups = (bytes_read + opts->group_size - 1) / opts->group_size;
+        for (int j = 0; j < num_groups; j++) {
+            // Выводим байты группы от старшего адреса к младшему (Little Endian)
+            for (int i = opts->group_size - 1; i >= 0; i--) {
+                int byte_idx = j * opts->group_size + i;
+                if (byte_idx < bytes_read) {
+                    print_byte_hex(line_buf[byte_idx]);
+                } else {
+                    print_byte_hex(0x00); // Дополнение нулями
+                }
+            }
+            printf("%c", ' '); // Выводим пробел после каждой группы
         }
 
         // 3. Вывод ASCII-превью (только если размер группы равен 1)
         if (opts->group_size == 1) {
-            // Вычисляем, сколько пробелов нужно напечатать для выравнивания колонки '|'
-            // Каждая группа байт занимает 3 символа в терминале (2 цифры hex + 1 пробел)
             int spaces_to_print = (opts->group_per_line - bytes_read) * 3;
             for (int i = 0; i < spaces_to_print; i++) {
                 printf("%c", ' ');
             }
 
-            // Выводим разделитель колонок
             printf("%c", '|');
             printf("%c", ' ');
 
-            // Выводим символы
             for (int i = 0; i < bytes_read; i++) {
                 unsigned char c = line_buf[i];
                 if (isprint(c)) {
