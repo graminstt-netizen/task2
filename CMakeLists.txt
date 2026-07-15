@@ -29,6 +29,8 @@ option(BUILD_TESTING "Build the testing suite" ON)
 
 add_subdirectory(lib)
 
+add_subdirectory(lib2)
+
 add_subdirectory(app)
 
 
